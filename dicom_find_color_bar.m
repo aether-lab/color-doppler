@@ -23,17 +23,15 @@ if nargin < 2 || isempty(ROI)
     pause;
     
 else
-    rect_xmin = ROI(1);
-    rect_ymin = ROI(2);
-    rect_width = ROI(3);
+    rect_xmin   = ROI(1);
+    rect_ymin   = ROI(2);
+    rect_width  = ROI(3);
     rect_height = ROI(4);
 end
 
 % Extract the rectangle from the image
 img_roi = fliplr(img(rect_ymin : rect_ymin + rect_height, ...
     rect_xmin : rect_xmin + rect_width, :));
-
-
 
 % Range of values
 roi_range = range(img_roi, 3);

@@ -4,8 +4,8 @@ function [vel_field, flow_rate] = dicom_color2val(dicom_slice, color_bar_data_ra
 % dicom_roi
 roi_xmin   = dicom_roi_extents(1);
 roi_ymin   = dicom_roi_extents(2);
-roi_xmax  = dicom_roi_extents(3);
-roi_ymax = dicom_roi_extents(4);
+roi_xmax   = dicom_roi_extents(3);
+roi_ymax   = dicom_roi_extents(4);
 
 dicom_roi = double(dicom_slice(roi_ymin : roi_ymax, roi_xmin : roi_xmax, :));
 
@@ -15,7 +15,7 @@ dicom_roi = double(dicom_slice(roi_ymin : roi_ymax, roi_xmin : roi_xmax, :));
 [roi_height, roi_width, ~] = size(dicom_roi);
 
 % Find pixels with color
-has_color = range(dicom_roi, 3) > 50;
+has_color = range(dicom_roi, 3) > 0;
 
 % Find the colored pixels
 colored_pixel_inds = find(has_color(:) > 0);

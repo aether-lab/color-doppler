@@ -18,6 +18,9 @@ load(meta_path);
 % This is the number of files in the metadata
 num_dicoms = length(MetaData);
 
+% Colorbar ROI
+colorbar_roi = [70, 135, 6, 337];
+
 % Loop over all the dicoms, showing
 % the first image in each and prompting
 % the user to indicate the imaging axis.
@@ -30,23 +33,23 @@ for k = 1 : num_dicoms
     if isfield(MetaData{k}, 'FileName')
         
         % Make the path to the file
-        dicom_path = fullfile(dicom_dir, MetaData{k}.FileName);
+%         dicom_path = fullfile(dicom_dir, MetaData{k}.FileName);
         
         % Read the image
-        img = dicomread(dicom_path, 'frames', 1);
+%         img = dicomread(dicom_path, 'frames', 1);
         
         % Show the first image
-        imshow(img);
+%         imshow(img);
         
         % Get input
-        img_axis = input('Axis: ', 's');
+%         vel_range = input('Velocity range: ');
         
-        % Assign result to structure
-        if img_axis == 's'
-            MetaData{k}.Axis = 'short';
-        elseif img_axis == 'l'
-            MetaData{k}.Axis = 'Long';
-        end      
+% %         % Assign result to structure
+%         if img_axis == 's'
+        MetaData{k}.ColorBarROI = colorbar_roi;
+%         elseif img_axis == 'l'
+%             MetaData{k}.Axis = 'Long';
+%         end      
         
     end
     
