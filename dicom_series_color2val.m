@@ -7,16 +7,16 @@ image_dir = '~/Desktop/flow_plots';
 
 file_dir = '/Volumes/Duo/grasshopper_imaging_full_frames';
 
-meta_data_path = '~/Desktop/grasshopper_meta.mat';
+meta_data_path = '~/Desktop/grasshopper_data/grasshopper_meta.mat';
+
+% OUtput directory
+output_dir = '~/Desktop/grasshopper_data/';
 
 % Open a file for logging
 fid = fopen(fullfile(output_dir, 'log.txt'), 'w');
 
 % Output structure name
 output_name = 'short_axis_data.mat';
-
-% OUtput directory
-output_dir = '~/Desktop/grasshopper_output_data/';
 
 % Make the output dir if it doesn't exist
 if ~exist(output_dir, 'dir')
@@ -28,9 +28,6 @@ load(meta_data_path);
 
 % Count files
 num_files = length(MetaData);
-
-% Color bar ROI
-colorbar_roi = [69, 187, 6, 335];
 
 % Color bar extents
 color_bar_range = [-1, 1];
@@ -46,11 +43,14 @@ frame_step = 1;
 % Block size for reading from the dicom
 slices_per_block = 1000;
 
+% Error files
+error_files_nums = []
+
 for f = 1 : num_files;
    try
        
     Data = MetaData{f}; 
-    
+        
     % File name
     input_file_name = Data.FileName;
     
@@ -72,7 +72,7 @@ for f = 1 : num_files;
     
         color_bar_range = Data.VelocityRange * [-1, 1];
 
-        color_bar_roi = Data.ColorBarROI;
+        color_bar_roi = Data.ColorBar.ROI;
         
         % Frames per second
         frames_per_second = double(Data.FrameRate);
@@ -98,7 +98,13 @@ for f = 1 : num_files;
         flow_rate_raw = zeros(number_of_frames, 1); 
 
         % Find the color bar
-        color_bar_data = dicom_find_color_bar(input_file_path, colorbar_roi);
+        if isfield(Data, 'ColorBar')
+            if isfield(Data.ColorBar, 'Data')
+            color_bar_data = Data.ColorBar.Data;
+            end
+        else
+            return
+        end
 
         % Find the ROI
         dicom_roi_extents = dicom_find_doppler_roi(input_file_path, image_roi);
@@ -131,14 +137,13 @@ for f = 1 : num_files;
                 % Index number within the whole dataset.
                 index_num = k + (n - 1) * slices_per_block;
 
-                % Inform the user
-                % fprintf(1, ['Block ' num2str(n) ', frame ' num2str(k) ' of ' num2str(slices_per_block) '\n']);
-
                 % Load the k'th dicom slice
                 dicom_slice = dicom_block(:, :, :, k);
                 
                % Extract the velocity field
-                [vel_field(:, :, index_num), flow_rate_raw(index_num)] = dicom_color2val(dicom_slice, color_bar_data,...
+                [vel_field(:, :, index_num), ...
+                    flow_rate_raw(index_num)] = ...
+                    dicom_color2val(dicom_slice, color_bar_data,...
                 color_bar_range, dicom_roi_extents);
             end
 
@@ -158,11 +163,12 @@ for f = 1 : num_files;
         save(output_file_path, 'Data', '-v7.3');
 		fprintf(fid, 'Saved data to file: %s\n\n', output_file_path);
 
-
     end
         
     catch
        fprintf(1, ['Error with file ' num2str(f) '\n']);
+	   fprintf(fid, ['Error with file ' num2str(f) '\n\n']);
+	   error_files_nums(end + 1) = f;
     end
 
 end

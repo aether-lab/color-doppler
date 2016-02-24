@@ -1,4 +1,4 @@
-function color_bar = dicom_find_color_bar(file_path, ROI)
+function [color_bar, ROI] = dicom_find_color_bar(file_path, ROI)
 
 % Load the first image in the dicom file.
 img = dicomread(file_path, 'frames', 1);
@@ -28,6 +28,9 @@ else
     rect_width  = ROI(3);
     rect_height = ROI(4);
 end
+
+% Repopulate the ROI vector
+ROI = [rect_xmin, rect_ymin, rect_width, rect_height];
 
 % Extract the rectangle from the image
 img_roi = fliplr(img(rect_ymin : rect_ymin + rect_height, ...

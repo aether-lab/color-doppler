@@ -29,7 +29,7 @@ num_colored_pixels = length(colored_pixel_inds);
 
 % Allocate the quantitative velocity field array
 vel_field = nan(roi_height, roi_width);
-
+    
 % Flip the color bar data to align its minimum
 % with that of the velocity range.
 color_bar_data = flipud(color_bar_data_raw);
