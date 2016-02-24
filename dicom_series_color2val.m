@@ -32,23 +32,29 @@ num_files = length(MetaData);
 % Color bar extents
 color_bar_range = [-1, 1];
 
+% Flow direction (-1 for negative values toward head)
 flow_dir = -1;
 
+% Starting frame within the Dicom
 frame_start = 1;
 
+% End frame within the Dicom. 
+% Set to inf to run all frames.
 frame_end_user = inf;
 
+% Frame step.
 frame_step = 1;
 
 % Block size for reading from the dicom
 slices_per_block = 1000;
 
 % Error files
-error_files_nums = []
+error_files_nums = [];
 
 for f = 1 : num_files;
    try
-       
+    
+   % Load the meta file.
     Data = MetaData{f}; 
         
     % File name
@@ -70,19 +76,22 @@ for f = 1 : num_files;
 			fprintf(1, 'On file %d of %d\n', f, num_files);
 			fprintf(fid, 'On file %d of %d\n', f, num_files);
     
+        % Read the color bar range from the meta data.
         color_bar_range = Data.VelocityRange * [-1, 1];
 
+        % Read the color bar ROI from the metadata
         color_bar_roi = Data.ColorBar.ROI;
         
         % Frames per second
         frames_per_second = double(Data.FrameRate);
 
+        % Read image ROI from Dicom metadata
         roi_x = Data.ROI.x;
         roi_y = Data.ROI.y;
         roi_width = Data.ROI.Width;
         roi_height = Data.ROI.Height;
 
-        % Image ROI
+        % Create the image ROI vector.
         image_roi = double([roi_x, roi_y, roi_width, roi_height]);
 
         % End frame
@@ -110,30 +119,41 @@ for f = 1 : num_files;
         dicom_roi_extents = dicom_find_doppler_roi(input_file_path, image_roi);
         
         % Find the width and height
-        dicom_subregion_width = dicom_roi_extents(3) - dicom_roi_extents(1) + 1;
-        dicom_subregion_height = dicom_roi_extents(4) - dicom_roi_extents(2) + 1;
+        dicom_subregion_width = ...
+            dicom_roi_extents(3) - dicom_roi_extents(1) + 1;
+        dicom_subregion_height = ...
+            dicom_roi_extents(4) - dicom_roi_extents(2) + 1;
 
         % Number of blocks to run
         number_of_blocks = ceil(number_of_frames / slices_per_block);
         
-        vel_field = zeros(dicom_subregion_height, dicom_subregion_width, number_of_frames);
+        % Allocate the velocity field.
+        vel_field = zeros(dicom_subregion_height, ...
+            dicom_subregion_width, number_of_frames);
 
         % Loop over all the blocks.
         for n = 1 : number_of_blocks
 
+            % Print some outputs to inform the user.
             fprintf(1,   'Loading block %d of %d\n', n, number_of_blocks);
 			fprintf(fid, 'Loading block %d of %d\n', n, number_of_blocks);
 
+            % First slice in the block
             first_slice = (n - 1) * slices_per_block + 1;
 
+            % Last slice in the block
             last_slice = min(first_slice + slices_per_block - 1, frame_end);
 
+            % Read the slices into a block
             dicom_block = dicomread(input_file_path, 'frames', ...
                 first_slice : last_slice);
+            
+            % Number of images in the block
+            num_in_block = size(dicom_block, 4);
 
             % Loop over all the frames
-            for k = 1 : slices_per_block
-
+            for k = 1 : num_in_block
+                
                 % Index number within the whole dataset.
                 index_num = k + (n - 1) * slices_per_block;
 
@@ -146,7 +166,6 @@ for f = 1 : num_files;
                     dicom_color2val(dicom_slice, color_bar_data,...
                 color_bar_range, dicom_roi_extents);
             end
-
 
         end
         
@@ -165,9 +184,12 @@ for f = 1 : num_files;
 
     end
         
-    catch
+   catch er
+       
        fprintf(1, ['Error with file ' num2str(f) '\n']);
+       fprintf(1, '%s\n\n', er.message);
 	   fprintf(fid, ['Error with file ' num2str(f) '\n\n']);
+       fprintf(fid, '%s\n\n', er.message);
 	   error_files_nums(end + 1) = f;
     end
 
