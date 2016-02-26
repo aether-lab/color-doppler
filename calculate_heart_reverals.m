@@ -73,10 +73,16 @@ end
 
 % Number with data
 num_with_data = length(trials_with_data);
+mean_period = zeros(num_with_data, 1);
+std_period = zeros(num_with_data, 1);
+median_period = zeros(num_with_data, 1);
+
 
 for n = 1 : num_with_data
    
     num_reversals = 0;
+    reversal_ind = [];
+
     
     t_num = trials_with_data(n);
     time_sec = Data{t_num}.Time * 60;
@@ -92,64 +98,80 @@ for n = 1 : num_with_data
     all_times = time_sec(all_locs);
     
     num_peaks = length(all_peaks);
-    for k = 2 : num_peaks 
-       peak_prod = all_peaks(k) * all_peaks(k - 1);
+    for k = 1 : num_peaks - 1 
+       peak_prod = all_peaks(k) * all_peaks(k + 1);
        
        if peak_prod < 0
            
            %%% IN PROGRESS
-           num_reversal = num_reversals + 1;
-%            reversal_
+           num_reversals = num_reversals + 1;
+           reversal_ind(num_reversals) = all_locs(k);
+
        end
         
         
     end
     
+    t_reversal = time_sec(reversal_ind(1 : 2 : end));
+    rev_period{n} = diff(t_reversal);
+    mean_period(n) = mean(rev_period{n});
+    std_period(n) = std(rev_period{n});
+    median_period(n) = median(rev_period{n});
     
+    subplot(1, num_with_data, n);
+    histogram(rev_period{n}, 50);
+    axis square;
+    xlabel('Reversal period (seconds)', 'FontSize', 8);
+    xlim([0, 5]);
+    set(gca, 'xtick', 0:5);
+    title(sprintf('Animal %d', n));
     
 end
 
 
-f = figure;
-set(f, 'visible', 'off')
 
-for k = 1 : 1000
-    
-    plot_name = sprintf('plot_%06d.png', k);
-    plot_path = fullfile(plot_dir, plot_name);
-    
-    for n = 1 : num_with_data
-        t_num = trials_with_data(n);
-        u_mms = Data{t_num}.Velocity(k);
-        
-        if u_mms > 0
-            y = 1;
-        elseif u_mms < 0
-            y = -1;
-        end
-        
-        % Marker size
-        marker_size = amplitude * abs(u_mms) + eps;
- 
-        subplot(1, num_with_data, n);
-        scatter(x, y, marker_size,...
-            'blue', 'filled', ...
-            'markerfacealpha', 0.5);
-           xlim([-1, 1]);
-           ylim([-1.5, 1.5]);
-           pbaspect([1, 3, 1])
-           grid on
-           set(gca, 'xticklabel', []);
-           set(gca, 'yticklabel', []);
-           box on
-   
-        
-        
-    end
-    
-   print(f, '-dpng', '-r200', plot_path);
-   
-end
+% 
+% 
+% f = figure;
+% set(f, 'visible', 'off')
+% 
+% for k = 1 : 1000
+%     
+%     plot_name = sprintf('plot_%06d.png', k);
+%     plot_path = fullfile(plot_dir, plot_name);
+%     
+%     for n = 1 : num_with_data
+%         t_num = trials_with_data(n);
+%         u_mms = Data{t_num}.Velocity(k);
+%         
+%         if u_mms > 0
+%             y = 1;
+%         elseif u_mms < 0
+%             y = -1;
+%         end
+%         
+%         % Marker size
+%         marker_size = amplitude * abs(u_mms) + eps;
+%  
+%         subplot(1, num_with_data, n);
+%         scatter(x, y, marker_size,...
+%             'blue', 'filled', ...
+%             'markerfacealpha', 0.5);
+%            xlim([-1, 1]);
+%            ylim([-1.5, 1.5]);
+%            pbaspect([1, 3, 1])
+%            grid on
+%            set(gca, 'xticklabel', []);
+%            set(gca, 'yticklabel', []);
+%            box on
+%    
+%         
+%         
+%     end
+%     
+%    print(f, '-dpng', '-r200', plot_path);
+%    
+% end
 
 
 
